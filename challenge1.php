@@ -32,6 +32,7 @@ try {
     // 512MB flavor
     $flavor = $compute->flavor('2');
 
+    // Instantiate a server resource
     $server = $compute->server();
 
     // Spin it up
@@ -45,20 +46,40 @@ try {
         )
     ));
 
+    // Define the callback function for building the server
     $callback = function($server) {
+    // If there is an error, exit and dump the error
     if (!empty($server->error)) {
         var_dump($server->error);
         exit;
     } else {
-        echo sprintf(
-            "Waiting on %s/%-12s %4s%%\n",
-            $server->name(),
-            $server->status(),
-            isset($server->progress) ? $server->progress : 0
-        );
+        $name = "Building cloud server: " . $server->name();
+        $status = "Status: " . $server->status();
+        if (!isset($server->progress)) {
+            $server->progress = 0;
+        }
+        $progress = "Progress: " . $server->progress;
+
+        echo $name . "\n";
+        echo $status . "\n";
+        echo $progress . "%";
+
+        if ($server->status == "BUILD") {
+            echo chr(27) . "[0G"; // Set cursor to first column for overwriting
+            echo chr(27) . "[2A"; // Set cursor up 2 lines for overwriting
+        } elseif ($server->status == "ACTIVE") {
+            echo "\n\nBuild complete.\n";
+            echo sprintf("Server IP: %s\n", $server->accessIPv4);
+            echo sprintf("root password: %s\n", $server->adminPass);
+        } else {
+            // Something went wrong
+            echo "Build failed!";
+        }
+
     }
     };
 
+    // Loop, waiting for the server to be built
     $server->waitFor(ServerState::ACTIVE, 600, $callback);
 
 } catch (\OpenCloud\Common\Exceptions\CredentialError $e) {
