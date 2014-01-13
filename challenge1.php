@@ -3,6 +3,8 @@
 require 'vendor/autoload.php';
 
 use OpenCloud\Rackspace;
+use OpenCloud\Compute\Constants\ServerState;
+use OpenCloud\Compute\Constants\Network;
 
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
 
@@ -28,7 +30,36 @@ try {
     $image = $compute->image('857d7d36-34f3-409f-8435-693e8797be8b');
 
     // 512MB flavor
-    $flavor = $compute->flavor('2');    
+    $flavor = $compute->flavor('2');
+
+    $server = $compute->server();
+
+    // Spin it up
+    $response = $server->create(array(
+        'name'     => 'Challenge 1 Server',
+        'image'    => $image,
+        'flavor'   => $flavor,
+        'networks' => array(
+            $compute->network(Network::RAX_PUBLIC),
+            $compute->network(Network::RAX_PRIVATE)
+        )
+    ));
+
+    $callback = function($server) {
+    if (!empty($server->error)) {
+        var_dump($server->error);
+        exit;
+    } else {
+        echo sprintf(
+            "Waiting on %s/%-12s %4s%%",
+            $server->name(),
+            $server->status(),
+            isset($server->progress) ? $server->progress : 0
+        );
+    }
+    };
+
+    $server->waitFor(ServerState::ACTIVE, 600, $callback);
 
 } catch (\OpenCloud\Common\Exceptions\CredentialError $e) {
     die($e->getMessage());
