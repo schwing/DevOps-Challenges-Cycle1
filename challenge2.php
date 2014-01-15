@@ -30,7 +30,7 @@ function waitLoop($servers, $timeout, $interval) {
 
             // If no error was returned, check on the progress of the server build
             if (empty($server->error)) {
-                $name = "Building cloud server: " . $server->name();
+                $name = "Building Cloud Server: " . $server->name();
                 $status = "Status: " . $server->status();
                 if (!isset($server->progress)) {
                     $server->progress = 0;
@@ -74,15 +74,13 @@ function waitLoop($servers, $timeout, $interval) {
     }
 }
 
-// Try opening $credsFile and fetching the credentials from it
-try {
-    if (($cloudCreds = @parse_ini_file($credsFile)) == false)
-        throw new Exception("Missing or unreadable INI file: " . $credsFile . "\n");
-} catch (Exception $e) {
-    die($e->getMessage());
-}
 
 try {
+    // Try to open $credsFile and read the credentials from it
+    if (($cloudCreds = @parse_ini_file($credsFile)) == false) {
+        throw new Exception("Missing or unreadable INI file: " . $credsFile . "\n");
+    }
+
     // Auth using credentials from $credsFile
     $client = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
         'username' => $cloudCreds['username'],
@@ -111,10 +109,8 @@ try {
             )
         );
         if (filter_var($numServers, FILTER_VALIDATE_INT, $filter_options) == FALSE){
-            // Invalid input
             echo "Invalid input, please try again.\n\n";
         } else {
-            // Valid input
             $validInput = TRUE;
             echo "\n";
         }
@@ -123,8 +119,28 @@ try {
     // Get the name scheme for the servers (not validating input here)
     echo sprintf("Input naming scheme for %s server(s)--will be of the form \$name# (blank will name numerically only): ", $numServers);
     $handle = fopen ("php://stdin","r");
-    $nameScheme = fgets($handle);
+    $nameScheme = trim(fgets($handle));
     echo "\n";
+
+    // Get the filesystem path of the public SSH key to inject
+    $validInput = FALSE;
+    while ($validInput == FALSE) {
+        echo "Input the filesystem path of the SSH public key to inject for the root user: ";
+        $handle = fopen ("php://stdin","r");
+        $publicKeyFile = trim(fgets($handle));
+        if (!is_readable($publicKeyFile)) {
+            // TODO: 256 character limit for path+filename
+            echo "Invalid input. File does not exist or is unreadable. Please try again.\n\n";
+        } else {
+            $validInput = TRUE;
+            $publicKey = $compute->keypair();
+            $publicKey->create(array(
+                'name' => 'deploymentkey',
+                'publickey' => file_get_contents($publicKeyFile)
+            ));
+            echo "\n";
+        }
+    }
 
     for ($serverCount = 1; $serverCount <= $numServers; $serverCount++) {
         // Instantiate a server resource
@@ -138,9 +154,11 @@ try {
             'networks' => array(
                 $compute->network(Network::RAX_PUBLIC),
                 $compute->network(Network::RAX_PRIVATE)
-            )
+            ),
+            'keypair' => 'deploymentkey'
         ));
     }
+
     // Loop, waiting for the servers to be built
     waitLoop($servers, 600, 15);
 
