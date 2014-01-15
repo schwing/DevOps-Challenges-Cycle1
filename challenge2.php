@@ -31,21 +31,29 @@ try {
 
     // 512MB flavor
     $flavor = $compute->flavor('2');
-/*
-    echo "How many servers would you like to build? Input a number from 1-3:";
-    $handle = fopen ("php://stdin","r");
-    $line = trim(fgets($handle));
-    $filter_options = array(
-        'options' => array(
-            'min_range' => 1,
-            'max_range' => 3
-        )
-    );
-    if(filter_var($line, FILTER_VALIDATE_INT, $filter_options) !== FALSE){
-            echo "ABORTING!\n";
-                exit;
+
+    $validInput = FALSE;
+    while ($validInput == FALSE) {
+        echo "How many servers would you like to build? Input a number from 1-3:";
+        $handle = fopen ("php://stdin","r");
+        $line = trim(fgets($handle));
+        $filter_options = array(
+            'options' => array(
+                'min_range' => 1,
+                'max_range' => 3
+            )
+        );
+        if (filter_var($line, FILTER_VALIDATE_INT, $filter_options) == FALSE){
+            // Invalid input
+            echo "Invalid input, please try again.\n\n";
+        } else {
+            // Valid input
+            $validInput = TRUE;
+        }
     }
- */
+
+    echo "valid\n\n";
+/*
     // Instantiate a server resource
     $server = $compute->server();
 
@@ -95,13 +103,7 @@ try {
 
     // Loop, waiting for the server to be built
     $server->waitFor(ServerState::ACTIVE, 600, $callback);
-
-} catch (\OpenCloud\Common\Exceptions\CredentialError $e) {
-    die($e->getMessage());
-
-} catch (\Guzzle\Http\Exception\BadResponseException $e) {
-    die($e->getMessage());
-
+ */
 } catch (Exception $e) {
     die($e->getMessage());
 
