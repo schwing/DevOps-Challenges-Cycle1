@@ -8,6 +8,74 @@ use OpenCloud\Compute\Constants\Network;
 
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
 
+// Define the function to loop while the servers are building
+function waitLoop($servers, $timeout, $interval) {
+    while (true) {
+        $numLines = 0;
+        $completedServers = 0;
+
+        foreach ($servers as &$server) {
+            // Some of this logic is taken from the waitFor function in php-opencloud
+
+            // Define finishing states
+            $states = array('ACTIVE', 'ERROR');
+
+            $startTime = time();
+
+            $server->refresh();
+
+            if ((time() - $startTime) > $timeout) {
+                echo sprintf("Request timed out: %s", str_pad($server->name(), 50));
+                $numLines = $numLines + 1;
+                return;
+            }
+
+            // If no error was returned, check on the progress of the server build
+            if (empty($server->error)) {
+                $name = "Building cloud server: " . $server->name();
+                $status = "Status: " . $server->status();
+                if (!isset($server->progress)) {
+                    $server->progress = 0;
+                }
+                $progress = sprintf("Progress: %s%%", $server->progress);
+
+                if ($server->status == "BUILD") {
+                    echo sprintf("%s\n", str_pad($name, 50));
+                    echo sprintf("%s\n", str_pad($status, 50));
+                    echo sprintf("%s\n\n", str_pad($progress, 50));
+                } elseif ($server->status == "ACTIVE") {
+                    echo sprintf("Build complete: %s\n", str_pad($server->name(), 50));
+                    echo sprintf("Server IP: %s\n", str_pad($server->accessIPv4, 50));
+                    echo sprintf("root password: %s\n\n", str_pad($server->adminPass, 50));
+                }
+                // Add to the total number of lines to remove next round
+                $numLines = $numLines + 4;
+            } else {
+                // This server build failed
+                echo sprintf("Build failed: %s\n", str_pad($server->name(), 50));
+                $numLines = $numLines + 1;
+            }
+
+            if (in_array($server->status(), $states)) {
+                $completedServers++;
+            }
+        }
+
+
+        // Check to see if servers are still being built, and loop if so
+        if ($completedServers != count($servers)) {
+            echo chr(27) . "[0G"; // Move the cursor to the first column for overwriting
+            echo chr(27) . sprintf("[%sA", $numLines); // Move the cursor up $numLines lines for overwriting
+
+            // Sleep for $interval
+            sleep($interval);
+        } else {
+            // All servers are in ACTIVE or ERROR state. Exit the wait loop
+            return;
+        }
+    }
+}
+
 // Try opening $credsFile and fetching the credentials from it
 try {
     if (($cloudCreds = @parse_ini_file($credsFile)) == false)
@@ -34,76 +102,43 @@ try {
 
     $validInput = FALSE;
     while ($validInput == FALSE) {
-        echo "How many servers would you like to build? Input a number from 1-3:";
+        echo "How many servers would you like to build? Input a number from 1-3: ";
         $handle = fopen ("php://stdin","r");
-        $line = trim(fgets($handle));
+        $numServers = trim(fgets($handle));
         $filter_options = array(
             'options' => array(
                 'min_range' => 1,
                 'max_range' => 3
             )
         );
-        if (filter_var($line, FILTER_VALIDATE_INT, $filter_options) == FALSE){
+        if (filter_var($numServers, FILTER_VALIDATE_INT, $filter_options) == FALSE){
             // Invalid input
             echo "Invalid input, please try again.\n\n";
         } else {
             // Valid input
             $validInput = TRUE;
+            echo "\n";
         }
     }
 
-    echo "valid\n\n";
-/*
-    // Instantiate a server resource
-    $server = $compute->server();
+    for ($serverCount = 1; $serverCount <= $numServers; $serverCount++) {
+        // Instantiate a server resource
+        $servers[$serverCount] = $compute->server();
 
-    // Spin it up
-    $response = $server->create(array(
-        'name'     => 'Challenge 1 Server',
-        'image'    => $image,
-        'flavor'   => $flavor,
-        'networks' => array(
-            $compute->network(Network::RAX_PUBLIC),
-            $compute->network(Network::RAX_PRIVATE)
-        )
-    ));
-
-    // Define the callback function for building the server
-    $callback = function($server) {
-    // If there is an error, exit and dump the error
-    if (!empty($server->error)) {
-        var_dump($server->error);
-        exit;
-    } else {
-        $name = "Building cloud server: " . $server->name();
-        $status = "Status: " . $server->status();
-        if (!isset($server->progress)) {
-            $server->progress = 0;
-        }
-        $progress = "Progress: " . $server->progress;
-
-        echo $name . "\n";
-        echo $status . "\n";
-        echo $progress . "%";
-
-        if ($server->status == "BUILD") {
-            echo chr(27) . "[0G"; // Set cursor to first column for overwriting
-            echo chr(27) . "[2A"; // Set cursor up 2 lines for overwriting
-        } elseif ($server->status == "ACTIVE") {
-            echo "\n\nBuild complete.\n";
-            echo sprintf("Server IP: %s\n", $server->accessIPv4);
-            echo sprintf("root password: %s\n", $server->adminPass);
-        } else {
-            // Something went wrong
-            echo "Build failed!";
-        }
-
+        // Spin it up
+        $buildResponse[$serverCount] = $servers[$serverCount]->create(array(
+            'name'     => sprintf('Server%s', $serverCount),
+            'image'    => $image,
+            'flavor'   => $flavor,
+            'networks' => array(
+                $compute->network(Network::RAX_PUBLIC),
+                $compute->network(Network::RAX_PRIVATE)
+            )
+        ));
     }
-    };
+    // Loop, waiting for the servers to be built
+    waitLoop($servers, 600, 15);
 
-    // Loop, waiting for the server to be built
-    $server->waitFor(ServerState::ACTIVE, 600, $callback);
- */
 } catch (Exception $e) {
     die($e->getMessage());
 
