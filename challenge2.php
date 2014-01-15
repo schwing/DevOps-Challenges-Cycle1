@@ -15,8 +15,6 @@ function waitLoop($servers, $timeout, $interval) {
         $completedServers = 0;
 
         foreach ($servers as &$server) {
-            // Some of this logic is taken from the waitFor function in php-opencloud
-
             // Define finishing states
             $states = array('ACTIVE', 'ERROR');
 
@@ -100,6 +98,7 @@ try {
     // 512MB flavor
     $flavor = $compute->flavor('2');
 
+    // Get the number of servers to build
     $validInput = FALSE;
     while ($validInput == FALSE) {
         echo "How many servers would you like to build? Input a number from 1-3: ";
@@ -121,13 +120,19 @@ try {
         }
     }
 
+    // Get the name scheme for the servers (not validating input here)
+    echo sprintf("Input naming scheme for %s server(s)--will be of the form \$name# (blank will name numerically only): ", $numServers);
+    $handle = fopen ("php://stdin","r");
+    $nameScheme = fgets($handle);
+    echo "\n";
+
     for ($serverCount = 1; $serverCount <= $numServers; $serverCount++) {
         // Instantiate a server resource
         $servers[$serverCount] = $compute->server();
 
         // Spin it up
         $buildResponse[$serverCount] = $servers[$serverCount]->create(array(
-            'name'     => sprintf('Server%s', $serverCount),
+            'name'     => sprintf('%s%s', $nameScheme, $serverCount),
             'image'    => $image,
             'flavor'   => $flavor,
             'networks' => array(
