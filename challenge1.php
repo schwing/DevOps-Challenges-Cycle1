@@ -8,15 +8,11 @@ use OpenCloud\Compute\Constants\Network;
 
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
 
-// Try opening $credsFile and fetching the credentials from it
 try {
-    if (($cloudCreds = @parse_ini_file($credsFile)) == false)
+    // Try opening $credsFile and fetching the credentials from it
+    if (($cloudCreds = @parse_ini_file($credsFile)) == false) {
         throw new Exception("Missing or unreadable INI file: " . $credsFile . "\n");
-} catch (Exception $e) {
-    die($e->getMessage());
-}
-
-try {
+    }
     // Auth using credentials from $credsFile
     $client = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
         'username' => $cloudCreds['username'],
@@ -82,14 +78,7 @@ try {
     // Loop, waiting for the server to be built
     $server->waitFor(ServerState::ACTIVE, 600, $callback);
 
-} catch (\OpenCloud\Common\Exceptions\CredentialError $e) {
-    die($e->getMessage());
-
-} catch (\Guzzle\Http\Exception\BadResponseException $e) {
-    die($e->getMessage());
-
 } catch (Exception $e) {
     die($e->getMessage());
-
 }
 ?>
