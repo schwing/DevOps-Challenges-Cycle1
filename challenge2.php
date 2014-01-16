@@ -59,7 +59,6 @@ function waitLoop($servers, $timeout, $interval) {
             }
         }
 
-
         // Check to see if servers are still being built, and loop if so
         if ($completedServers != count($servers)) {
             echo chr(27) . "[0G"; // Move the cursor to the first column for overwriting
@@ -99,7 +98,7 @@ try {
     // Get the number of servers to build
     $validInput = FALSE;
     while ($validInput == FALSE) {
-        echo "How many servers would you like to build? Input a number from 1-3: ";
+        echo "How many servers would you like to build?\nInput a number from 1-3: ";
         $handle = fopen ("php://stdin","r");
         $numServers = trim(fgets($handle));
         $filter_options = array(
@@ -117,26 +116,39 @@ try {
     }
 
     // Get the name scheme for the servers (not validating input here)
-    echo sprintf("Input naming scheme for %s server(s)--will be of the form \$name# (blank will name numerically only): ", $numServers);
+    echo sprintf("Input naming scheme for %s server(s)--will be of the form \$name#\n(blank will name numerically only): ", $numServers);
     $handle = fopen ("php://stdin","r");
     $nameScheme = trim(fgets($handle));
     echo "\n";
 
-    // Get the filesystem path of the public SSH key to inject
+    // Get the filesystem path of the public SSH key to inject, or generate a new one if no input is given
     $validInput = FALSE;
     while ($validInput == FALSE) {
-        echo "Input the filesystem path of the SSH public key to inject for the root user: ";
+        echo "Input the filesystem path of the SSH public key to inject for the root user\n(press ENTER with no input to generate a new keypair): ";
         $handle = fopen ("php://stdin","r");
         $publicKeyFile = trim(fgets($handle));
-        if (!is_readable($publicKeyFile)) {
+        // Generate a unique ID for the SSH key name
+        $timestamp = time();
+        $keyName = sprintf("deployedkey-%s-%s", $nameScheme, $timestamp);
+        // Instantiate a keypair object
+        $keypair = $compute->keypair();
+        if (!is_readable($publicKeyFile) && $publicKeyFile != NULL) {
             // TODO: 256 character limit for path+filename
             echo "Invalid input. File does not exist or is unreadable. Please try again.\n\n";
+        } elseif ($publicKeyFile == NULL) {
+            $validInput = TRUE;
+            // Generate an SSH keypair for the server
+            $keypair->create(array(
+                'name' => $keyName
+            ));
+            // Provide the SSH keypair to the user
+            echo sprintf("\nGenerated public key:\n%s\n",$keypair->getPublicKey());
+            echo sprintf("Generated private key:\n%s\n",$keypair->getPrivateKey());
         } else {
             $validInput = TRUE;
-            $publicKey = $compute->keypair();
-            $publicKey->create(array(
-                'name' => 'deploymentkey',
-                'publickey' => file_get_contents($publicKeyFile)
+            $keypair->create(array(
+                'name' => $keyName,
+                'publicKey' => file_get_contents($publicKeyFile)
             ));
             echo "\n";
         }
@@ -155,7 +167,7 @@ try {
                 $compute->network(Network::RAX_PUBLIC),
                 $compute->network(Network::RAX_PRIVATE)
             ),
-            'keypair' => 'deploymentkey'
+            'keypair' => $keyName
         ));
     }
 
