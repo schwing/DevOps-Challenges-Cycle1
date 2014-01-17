@@ -4,10 +4,8 @@
         "symfony/dependency-injection": "dev-master",
         "symfony/http-kernel": "dev-master",
         "symfony/proxy-manager-bridge": "dev-master"
-    }
-}
-{
+    },
     "autoload": {
-        "": "lib/"
+        "psr-0": {"Challenges\\": "lib/"}
     }
 }
