@@ -16,9 +16,12 @@ __Challenge 4__: Write a script that creates a Cloud Files Container. If the con
 How to run
 ----------
 
-This project depends on [Composer](http://getcomposer.org/), and a single command will fetch all dependencies:
+This project depends on [Composer](http://getcomposer.org/), and dependencies must be fetched:
 
 ```bash
 # Install Composer
 curl -sS https://getcomposer.org/installer | php
+
+# Fetch all dependencies
+php composer.phar install
 ```
