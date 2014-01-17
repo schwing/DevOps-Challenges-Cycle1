@@ -6,9 +6,7 @@ use OpenCloud\Rackspace;
 use OpenCloud\Compute\Constants\ServerState;
 use OpenCloud\Compute\Constants\Network;
 
-// Load custom classes
-set_include_path(get_include_path().PATH_SEPARATOR.'lib/');
-spl_autoload_register();
+// Load custom class(es)
 use Challenges\Input;
 
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
