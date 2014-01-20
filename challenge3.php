@@ -29,20 +29,35 @@ try {
         echo sprintf("%s\t%s\n", $domCount, $domain->Name());
     }
 
-    // Get the number of servers to build
+    // Get the domain ID (this is not the actual domain ID, but is from the simple numbered list above)
     $validInput = FALSE;
     while ($validInput == FALSE) {
         echo "Please input a domain ID from the list above above to add an A record: ";
         $handle = fopen ("php://stdin","r");
-        $numServers = trim(fgets($handle));
+        $domId = trim(fgets($handle));
         $filter_options = array(
             'options' => array(
                 'min_range' => 1,
                 'max_range' => $domCount
             )
         );
-        if (filter_var($numServers, FILTER_VALIDATE_INT, $filter_options) == FALSE){
+        if (filter_var($domId, FILTER_VALIDATE_INT, $filter_options) == FALSE) {
             echo "Invalid input, please try again.\n\n";
+        } else {
+            $validInput = TRUE;
+            echo "\n";
+        }
+    }
+
+    // Get the FQDN
+    $validInput = FALSE;
+    while ($validInput == FALSE) {
+        echo "Please input the FQDN: ";
+        $handle = fopen ("php://stdin","r");
+        $fqdn = trim(fgets($handle));
+
+        if ($fqdn == NULL) {
+            echo "No fqdn provided. Please try again.\n\n";
         } else {
             $validInput = TRUE;
             echo "\n";
