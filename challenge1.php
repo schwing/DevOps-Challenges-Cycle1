@@ -6,22 +6,18 @@ use OpenCloud\Rackspace;
 use OpenCloud\Compute\Constants\ServerState;
 use OpenCloud\Compute\Constants\Network;
 
+// Load custom class(es)
+use Challenges\Auth;
+
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
 
 try {
-    // Try opening $credsFile and fetching the credentials from it
-    if (($cloudCreds = @parse_ini_file($credsFile)) == false) {
-        throw new Exception("Missing or unreadable INI file: " . $credsFile . "\n");
-    }
     // Auth using credentials from $credsFile
-    $client = new Rackspace(Rackspace::US_IDENTITY_ENDPOINT, array(
-        'username' => $cloudCreds['username'],
-        'apiKey'   => $cloudCreds['api_key']
-    ));
+    $client = Auth::authenticate($credsFile);
 
     // Set the compute region to DFW
     $compute = $client->computeService('cloudServersOpenStack', 'DFW');
-
+/*
     // Debian Wheezy image
     $image = $compute->image('857d7d36-34f3-409f-8435-693e8797be8b');
 
@@ -77,7 +73,7 @@ try {
 
     // Loop, waiting for the server to be built
     $server->waitFor(ServerState::ACTIVE, 600, $callback);
-
+ */
 } catch (Exception $e) {
     die($e->getMessage());
 }

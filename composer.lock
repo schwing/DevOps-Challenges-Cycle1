@@ -253,7 +253,7 @@
                 {
                     "name": "Marco Pivetta",
                     "email": "ocramius@gmail.com",
-                    "homepage": "http://ocramius.github.com/",
+                    "homepage": "http://marco-pivetta.com/",
                     "role": "Developer"
                 }
             ],
@@ -312,12 +312,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/rackspace/php-opencloud.git",
-                "reference": "05887c46d477d399433d5452d402e2f9d07de78a"
+                "reference": "99d26986edcc49e6598cbf11c4570847db304733"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rackspace/php-opencloud/zipball/05887c46d477d399433d5452d402e2f9d07de78a",
-                "reference": "05887c46d477d399433d5452d402e2f9d07de78a",
+                "url": "https://api.github.com/repos/rackspace/php-opencloud/zipball/99d26986edcc49e6598cbf11c4570847db304733",
+                "reference": "99d26986edcc49e6598cbf11c4570847db304733",
                 "shasum": ""
             },
             "require": {
@@ -362,7 +362,7 @@
                 "rackspace",
                 "swift"
             ],
-            "time": "2014-01-17 00:34:37"
+            "time": "2014-01-20 13:28:56"
         },
         {
             "name": "symfony/debug",
