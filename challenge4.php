@@ -47,7 +47,24 @@ try {
         throw new Exception(sprintf("A container named \"%s\" already exists.\nPlease run this script again with a different container name.\n", $containerName));
     }
 
-    
+    // Get the filesystem path of the directory to upload to this new container
+    $validInput = FALSE;
+    while ($validInput == FALSE) {
+        echo "Input the filesystem path of the directory to upload to the new container: ";
+        $handle = fopen ("php://stdin","r");
+        $directoryPath = trim(fgets($handle));
+        if ($directoryPath == NULL) {
+            echo "Invalid input. Directory not specified. Please try again.\n\n";
+        }
+        elseif (!is_dir($directoryPath) || !is_readable($directoryPath)) {
+            echo "Invalid input. Directory does not exist or is unreadable. Please try again.\n\n";
+        } else {
+            $validInput = TRUE;
+            echo "\n";
+        }
+    }
+
+    // Upload the directory contents to the container
 
 } catch (Exception $e) {
     die($e->getMessage());
