@@ -3,6 +3,7 @@
 require 'vendor/autoload.php';
 
 use OpenCloud\Rackspace;
+use OpenCloud\ObjectStore\Upload\DirectorySync;
 
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
 
@@ -37,10 +38,10 @@ try {
     }
 
     // Try to create the container
-    $createResponse = $cloudFiles->createContainer($containerName);
+    $container = $cloudFiles->createContainer($containerName);
 
     // Throw an exception if we weren't able to create the container.
-    if ($createResponse == FALSE) {
+    if ($container == FALSE) {
         // Try to get the container. If this fails for any reason, it will throw an exception.
         // Otherwise, the container exists because we were able to get it, so we throw our own custom exception and exit.
         $cloudFiles->getContainer($containerName);
@@ -65,6 +66,9 @@ try {
     }
 
     // Upload the directory contents to the container
+    $upload = $container->uploadDirectory($directoryPath);
+
+
 
 } catch (Exception $e) {
     die($e->getMessage());
