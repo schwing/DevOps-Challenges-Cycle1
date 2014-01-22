@@ -70,11 +70,14 @@ try {
     //   or anything else that would be useful when uploading files :-(
     $container->uploadDirectory($directoryPath);
 
+    echo "Upload complete.\n";
+
     // Enable CDN for the container
     $container->enableCdn();
 
     // Get the CDN URI
-    printf("CDN enabled.\nURI: %s\n", $container->getCdn()->getCdnUri());
+    $cdnUri = $container->getCdn()->getCdnUri();
+    printf("CDN enabled. URI: %s\n", $cdnUri);
 
 } catch (Exception $e) {
     die($e->getMessage());
