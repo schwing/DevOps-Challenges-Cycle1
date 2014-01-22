@@ -3,7 +3,6 @@
 require 'vendor/autoload.php';
 
 use OpenCloud\Rackspace;
-use OpenCloud\ObjectStore\Upload\DirectorySync;
 
 $credsFile = $_SERVER['HOME'] . "/.rackspace_cloud_credentials";
 
