@@ -1,0 +1,8 @@
+{
+    "require": {
+        "rackspace/php-opencloud": "dev-master",
+        "symfony/dependency-injection": "dev-master",
+        "symfony/http-kernel": "dev-master",
+        "symfony/proxy-manager-bridge": "dev-master"
+    }
+}

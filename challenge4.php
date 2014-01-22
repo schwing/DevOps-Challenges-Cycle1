@@ -66,9 +66,15 @@ try {
     }
 
     // Upload the directory contents to the container
-    $upload = $container->uploadDirectory($directoryPath);
+    //   This doesn't return anything, and I don't see any hooks to check on upload status, current file,
+    //   or anything else that would be useful when uploading files :-(
+    $container->uploadDirectory($directoryPath);
 
+    // Enable CDN for the container
+    $container->enableCdn();
 
+    // Get the CDN URI
+    printf("CDN enabled.\nURI: %s\n", $container->getCdn()->getCdnUri());
 
 } catch (Exception $e) {
     die($e->getMessage());
